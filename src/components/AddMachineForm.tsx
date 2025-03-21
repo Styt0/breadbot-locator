@@ -16,12 +16,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 // Define form schema
 const formSchema = z.object({
   name: z.string().min(3, "Naam moet minstens 3 karakters bevatten"),
   address: z.string().min(5, "Adres moet minstens 5 karakters bevatten"),
+  city: z.string().min(2, "Stad moet minstens 2 karakters bevatten"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -40,6 +41,7 @@ const AddMachineForm: React.FC<AddMachineFormProps> = ({ onSuccess, className })
     defaultValues: {
       name: "",
       address: "",
+      city: "Amsterdam",
     },
   });
 
@@ -49,15 +51,19 @@ const AddMachineForm: React.FC<AddMachineFormProps> = ({ onSuccess, className })
       setSubmitting(true);
       
       // Get current user location for the vending machine
-      const userLocation = await getUserLocation();
+      const location = await getUserLocation();
       
       // Add the new vending machine
-      addVendingMachine({
+      await addVendingMachine({
         name: data.name,
         address: data.address,
-        location: userLocation,
+        city: data.city,
         isStocked: true, // Assume new machines are stocked
+        location: location,
       });
+      
+      // Show success message
+      toast.success("Broodautomaat succesvol toegevoegd!");
       
       // Reset form
       form.reset();
@@ -125,13 +131,34 @@ const AddMachineForm: React.FC<AddMachineFormProps> = ({ onSuccess, className })
                 <FormLabel>Adres</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Bijv. Dorpstraat 12, Utrecht"
+                    placeholder="Bijv. Dorpstraat 12"
                     {...field}
                     disabled={submitting}
                   />
                 </FormControl>
                 <FormDescription>
                   Voeg een duidelijke adresbeschrijving toe.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stad</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Bijv. Utrecht"
+                    {...field}
+                    disabled={submitting}
+                  />
+                </FormControl>
+                <FormDescription>
+                  In welke stad staat de automaat?
                 </FormDescription>
                 <FormMessage />
               </FormItem>

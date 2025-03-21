@@ -122,7 +122,7 @@ const VendingMachineList: React.FC<VendingMachineListProps> = ({
                 machine={machine}
                 onStatusChange={handleMachineUpdate}
                 className="cursor-pointer hover:bg-gray-50"
-                onClick={() => onSelectMachine?.(machine)}
+                onSelectMachine={() => onSelectMachine?.(machine)}
               />
             ))}
           </>

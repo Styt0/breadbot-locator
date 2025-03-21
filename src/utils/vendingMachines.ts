@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { formatDistance, formatRelative } from "date-fns";
+import { nl } from "date-fns/locale";
 
 // Define interfaces
 export interface VendingMachine {
@@ -15,7 +17,49 @@ export interface VendingMachine {
   description?: string;
   openingHours?: string;
   image?: string;
+  distance?: number; // Adding distance property for showing in UI
 }
+
+// Format relative time since last update (e.g. "5 minutes ago")
+export const formatRelativeTime = (date: Date): string => {
+  return formatRelative(date, new Date(), {
+    locale: nl
+  });
+};
+
+// Format distance to human-readable text (e.g. "2.4 km")
+export const formatDistanceToString = (distance: number): string => {
+  if (distance < 1) {
+    return `${Math.round(distance * 1000)} m`;
+  }
+  return `${distance.toFixed(1)} km`;
+};
+
+// Get user's geolocation
+export const getUserLocation = async (): Promise<{ lat: number; lng: number }> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      // Fallback to Amsterdam if geolocation is not available
+      resolve({ lat: 52.3676, lng: 4.9041 });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      },
+      (error) => {
+        console.error("Error getting user location:", error);
+        // Fallback to Amsterdam on error
+        resolve({ lat: 52.3676, lng: 4.9041 });
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  });
+};
 
 // Mock data for development
 const mockMachines: VendingMachine[] = [
@@ -187,16 +231,22 @@ export const updateVendingMachineStatus = async (
 
 // Add a new vending machine
 export const addVendingMachine = async (
-  machine: Omit<VendingMachine, "id" | "lastReported">
+  machine: Omit<VendingMachine, "id" | "lastReported" | "latitude" | "longitude"> & 
+    { location?: { lat: number; lng: number } }
 ): Promise<VendingMachine> => {
   // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Use provided location or default to Amsterdam
+  const location = machine.location || { lat: 52.3676, lng: 4.9041 };
   
   // Create new machine with generated ID
   const newMachine: VendingMachine = {
     ...machine,
     id: `vm-${String(mockMachines.length + 1).padStart(3, '0')}`,
-    lastReported: new Date()
+    lastReported: new Date(),
+    latitude: location.lat,
+    longitude: location.lng,
   };
   
   // Add to mock database

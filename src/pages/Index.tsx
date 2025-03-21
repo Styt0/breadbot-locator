@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,7 @@ const Index = () => {
                     compact={true}
                     className="h-full"
                     onStatusChange={handleStatusChange}
-                    onSelect={() => {
+                    onSelectMachine={() => {
                       setSelectedMachine(machine);
                       setActiveTab("map");
                     }}
