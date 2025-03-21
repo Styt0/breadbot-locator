@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import {
   getVendingMachinesInRadius,
   updateVendingMachineStatus
 } from "@/utils/vendingMachines";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("map");
@@ -24,15 +23,12 @@ const Index = () => {
   const [selectedMachine, setSelectedMachine] = useState<VendingMachine | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load all machines on mount
   useEffect(() => {
     const loadAllMachines = async () => {
       try {
-        // First load all machines
         const allMachines = getVendingMachines();
         setMachines(allMachines);
         
-        // Then get the closest 5 for the quick nav
         const nearest = await getClosestVendingMachines(5);
         setClosestMachines(nearest);
       } catch (error) {
@@ -46,16 +42,13 @@ const Index = () => {
     loadAllMachines();
   }, []);
 
-  // Refresh the machines
   const refreshMachines = async () => {
     try {
       setLoading(true);
       
-      // Refresh all machines
       const allMachines = await getVendingMachinesInRadius(20);
       setMachines(allMachines);
       
-      // Refresh closest machines
       const nearest = await getClosestVendingMachines(5);
       setClosestMachines(nearest);
       
@@ -68,25 +61,20 @@ const Index = () => {
     }
   };
 
-  // Handle adding a new machine
   const handleAddMachine = () => {
     refreshMachines();
     setActiveTab("map");
   };
 
-  // Handle changing machine status
   const handleStatusChange = (machine: VendingMachine) => {
-    // Update status in the machines list
     setMachines(prev => 
       prev.map(m => m.id === machine.id ? machine : m)
     );
     
-    // Update in the closest machines list if needed
     setClosestMachines(prev => 
       prev.map(m => m.id === machine.id ? machine : m)
     );
     
-    // Update selected machine if needed
     if (selectedMachine?.id === machine.id) {
       setSelectedMachine(machine);
     }
@@ -97,7 +85,6 @@ const Index = () => {
       <NavBar />
       
       <div className="container px-4 py-6 flex-1 flex flex-col md:py-8">
-        {/* Hero Section */}
         <section className="mb-8 animate-slide-up">
           <h1 className="text-3xl font-medium tracking-tight md:text-4xl mb-3">
             Vind de dichtstbijzijnde broodautomaat
@@ -107,7 +94,6 @@ const Index = () => {
             of voeg nieuwe automaten toe om anderen te helpen.
           </p>
           
-          {/* Quick Navigation Cards */}
           <div className="mt-6">
             <div className="flex items-center mb-4">
               <Navigation className="mr-2 h-5 w-5 text-blue-500" />
@@ -131,10 +117,10 @@ const Index = () => {
                   <VendingMachineCard 
                     key={machine.id} 
                     machine={machine}
-                    compact
+                    compact={true}
                     className="h-full"
                     onStatusChange={handleStatusChange}
-                    onClick={() => {
+                    onSelect={() => {
                       setSelectedMachine(machine);
                       setActiveTab("map");
                     }}
@@ -145,7 +131,6 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Main Interface Tabs */}
         <Tabs 
           value={activeTab} 
           onValueChange={setActiveTab}

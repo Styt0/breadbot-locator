@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Bread, Menu, X } from "lucide-react";
+import { BaggageClaim, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }
     <header className={cn("sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-sm", className)}>
       <div className="container flex h-16 items-center px-4 sm:px-6">
         <div className="flex items-center gap-2 mr-4">
-          <Bread className="h-6 w-6 text-bread-600" />
+          <BaggageClaim className="h-6 w-6 text-bread-600" />
           <span className="font-medium text-xl hidden sm:inline-block">{title}</span>
         </div>
         
@@ -87,7 +87,7 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }
               <div className="px-1 py-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <Bread className="h-5 w-5 text-bread-600" />
+                    <BaggageClaim className="h-5 w-5 text-bread-600" />
                     <span className="font-medium">{title}</span>
                   </div>
                   <SheetTrigger asChild>
