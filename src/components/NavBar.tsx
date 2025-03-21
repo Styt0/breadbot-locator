@@ -11,6 +11,8 @@ interface NavBarProps {
 }
 
 const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }) => {
+  const [open, setOpen] = React.useState(false);
+  
   return (
     <header className={cn("sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-sm", className)}>
       <div className="container flex h-16 items-center px-4 sm:px-6">
@@ -72,13 +74,14 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }
             Registreren
           </Button>
           
-          <Sheet>
+          <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="md:hidden"
                 aria-label="Menu"
+                onClick={() => setOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -90,16 +93,15 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }
                     <BaggageClaim className="h-5 w-5 text-bread-600" />
                     <span className="font-medium">{title}</span>
                   </div>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    aria-label="Close"
+                    onClick={() => setOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <nav className="flex flex-col space-y-4">
