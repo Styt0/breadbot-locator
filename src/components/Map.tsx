@@ -24,6 +24,7 @@ const Map: React.FC<MapProps> = ({
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   // Simulate map loading
   useEffect(() => {
@@ -38,11 +39,13 @@ const Map: React.FC<MapProps> = ({
   useEffect(() => {
     const initializeMap = async () => {
       try {
-        const userLocation = await getUserLocation();
-        console.log("User location:", userLocation);
-        // In a real implementation, you would center the map on the user's location here
+        const location = await getUserLocation();
+        setUserLocation(location);
+        console.log("User location obtained:", location);
       } catch (error) {
         console.error("Error initializing map:", error);
+        // Set default location if getUserLocation fails
+        setUserLocation({ lat: 52.3676, lng: 4.9041 });
       }
     };
     
@@ -135,12 +138,14 @@ const Map: React.FC<MapProps> = ({
           })}
           
           {/* User location marker */}
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-            <div className="relative">
-              <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-white shadow-md"></div>
-              <div className="absolute inset-0 bg-blue-500 rounded-full opacity-30 animate-ping"></div>
+          {userLocation && (
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+              <div className="relative">
+                <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-white shadow-md"></div>
+                <div className="absolute inset-0 bg-blue-500 rounded-full opacity-30 animate-ping"></div>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Map controls */}
           <div className="absolute top-4 right-4 flex flex-col gap-2">

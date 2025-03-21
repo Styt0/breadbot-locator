@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistance, formatRelative } from "date-fns";
 import { nl } from "date-fns/locale";
+import { Geolocation } from '@capacitor/geolocation';
 
 // Define interfaces
 export interface VendingMachine {
@@ -38,28 +38,57 @@ export const formatDistanceToString = (distance: number): string => {
 
 // Get user's geolocation
 export const getUserLocation = async (): Promise<{ lat: number; lng: number }> => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      // Fallback to Amsterdam if geolocation is not available
-      resolve({ lat: 52.3676, lng: 4.9041 });
-      return;
+  try {
+    // Try to use Capacitor Geolocation if available (for mobile apps)
+    if (typeof Geolocation !== 'undefined') {
+      try {
+        // Request permissions first
+        const permissionStatus = await Geolocation.requestPermissions();
+        
+        if (permissionStatus.location === 'granted') {
+          const position = await Geolocation.getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: 10000
+          });
+
+          return {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+        }
+      } catch (capacitorError) {
+        console.error("Capacitor Geolocation error:", capacitorError);
+        // Fall through to browser geolocation API
+      }
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      },
-      (error) => {
-        console.error("Error getting user location:", error);
-        // Fallback to Amsterdam on error
-        resolve({ lat: 52.3676, lng: 4.9041 });
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    );
-  });
+    // Fallback to browser geolocation API
+    if (navigator.geolocation) {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+          },
+          (error) => {
+            console.error("Browser geolocation error:", error);
+            // Fallback to Amsterdam on error
+            resolve({ lat: 52.3676, lng: 4.9041 });
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      });
+    }
+
+    // Fallback if geolocation is not available
+    console.log("Geolocation not available, using default location");
+    return { lat: 52.3676, lng: 4.9041 };
+  } catch (error) {
+    console.error("Error in getUserLocation:", error);
+    return { lat: 52.3676, lng: 4.9041 }; // Fallback to Amsterdam
+  }
 };
 
 // Mock data for development

@@ -8,6 +8,7 @@ interface StatusBadgeProps {
   lastReported?: Date;
   size?: "sm" | "md" | "lg";
   className?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({
@@ -15,6 +16,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   lastReported,
   size = "md",
   className,
+  onClick,
 }) => {
   // Size mappings for Tailwind classes
   const sizeClasses = {
@@ -44,8 +46,10 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
         "inline-flex items-center rounded-full border font-medium transition-colors",
         statusColor,
         sizeClasses[size],
+        onClick ? "cursor-pointer hover:opacity-80" : "",
         className
       )}
+      onClick={onClick}
     >
       {isStale ? (
         <Clock className="shrink-0" size={size === "sm" ? 12 : size === "md" ? 14 : 16} />
