@@ -55,7 +55,7 @@ const VendingMachineCard: React.FC<VendingMachineCardProps> = ({
           <StatusBadge 
             isStocked={machine.isStocked} 
             lastReported={machine.lastReported}
-            size={compact ? "sm" : "default"}
+            size={compact ? "sm" : "md"}
             onClick={handleStatusToggle}
           />
         </div>
