@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistance, formatRelative } from "date-fns";
@@ -161,8 +162,14 @@ export const getVendingMachinesInRadius = async (
   // If no coordinates provided, use geolocation or default to Amsterdam
   if (!lat || !lng) {
     // In a real app, we would use the browser's geolocation
-    lat = 52.3676;
-    lng = 4.9041;
+    try {
+      const location = await getUserLocation();
+      lat = location.lat;
+      lng = location.lng;
+    } catch {
+      lat = 52.3676;
+      lng = 4.9041;
+    }
   }
   
   // Filter machines within radius
@@ -184,24 +191,45 @@ export const getClosestVendingMachines = async (
   // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 600));
   
-  // In a real app, we would use the browser's geolocation
-  const userLat = 52.3676;
-  const userLng = 4.9041;
-  
-  // Sort by distance
-  return [...mockMachines]
-    .sort((a, b) => {
-      const distA = Math.sqrt(
-        Math.pow(a.latitude - userLat, 2) + 
-        Math.pow(a.longitude - userLng, 2)
-      );
-      const distB = Math.sqrt(
-        Math.pow(b.latitude - userLat, 2) + 
-        Math.pow(b.longitude - userLng, 2)
-      );
-      return distA - distB;
-    })
-    .slice(0, limit);
+  try {
+    // Get user location
+    const location = await getUserLocation();
+    const userLat = location.lat;
+    const userLng = location.lng;
+    
+    // Sort by distance
+    return [...mockMachines]
+      .sort((a, b) => {
+        const distA = Math.sqrt(
+          Math.pow(a.latitude - userLat, 2) + 
+          Math.pow(a.longitude - userLng, 2)
+        );
+        const distB = Math.sqrt(
+          Math.pow(b.latitude - userLat, 2) + 
+          Math.pow(b.longitude - userLng, 2)
+        );
+        return distA - distB;
+      })
+      .slice(0, limit);
+  } catch {
+    // Fallback to default location
+    const userLat = 52.3676;
+    const userLng = 4.9041;
+    
+    return [...mockMachines]
+      .sort((a, b) => {
+        const distA = Math.sqrt(
+          Math.pow(a.latitude - userLat, 2) + 
+          Math.pow(a.longitude - userLng, 2)
+        );
+        const distB = Math.sqrt(
+          Math.pow(b.latitude - userLat, 2) + 
+          Math.pow(b.longitude - userLng, 2)
+        );
+        return distA - distB;
+      })
+      .slice(0, limit);
+  }
 };
 
 // Update vending machine status
