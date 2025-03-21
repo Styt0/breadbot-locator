@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
 import { VendingMachine, getUserLocation } from "@/utils/vendingMachines";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
-// Note: This is a mockup map component that simulates a map interface
-// In a real application, you would integrate with a map library like Mapbox, Google Maps, or Leaflet
+// Temporary mapbox token - in production, this should be stored securely
+// This is a public token that can be included directly in client-side code
+mapboxgl.accessToken = "pk.eyJ1IjoibG92YWJsZS1haS1leGFtcGxlIiwiYSI6ImNsbWV3Z2FzcjA0YjgyanJ3dWdscWRzNTAifQ.pl6FEubPvEFRgzAGMBtaig";
 
 interface MapProps {
   machines: VendingMachine[];
@@ -22,61 +25,182 @@ const Map: React.FC<MapProps> = ({
   onSelectMachine,
   className,
 }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<{[key: string]: mapboxgl.Marker}>({});
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
-  // Simulate map loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Center the map on user location on component mount
+  // Initialize map when component mounts
   useEffect(() => {
     const initializeMap = async () => {
       try {
+        // Get user location
         const location = await getUserLocation();
         setUserLocation(location);
-        console.log("User location obtained:", location);
+        
+        if (mapContainer.current && !map.current) {
+          // Create new map instance
+          map.current = new mapboxgl.Map({
+            container: mapContainer.current,
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: [location.lng, location.lat],
+            zoom: 12,
+          });
+          
+          // Add navigation controls
+          map.current.addControl(
+            new mapboxgl.NavigationControl(),
+            "top-right"
+          );
+          
+          // Add user location marker
+          new mapboxgl.Marker({
+            color: "#3b82f6",
+            scale: 0.8
+          })
+            .setLngLat([location.lng, location.lat])
+            .addTo(map.current);
+          
+          // Add geolocate control
+          map.current.addControl(
+            new mapboxgl.GeolocateControl({
+              positionOptions: {
+                enableHighAccuracy: true
+              },
+              trackUserLocation: true,
+              showUserHeading: true
+            }),
+            "top-right"
+          );
+          
+          // Wait for map to load before adding markers
+          map.current.on("load", () => {
+            setLoading(false);
+            addVendingMachineMarkers();
+          });
+        }
       } catch (error) {
         console.error("Error initializing map:", error);
         // Set default location if getUserLocation fails
-        setUserLocation({ lat: 52.3676, lng: 4.9041 });
+        const defaultLocation = { lat: 52.3676, lng: 4.9041 }; // Amsterdam
+        setUserLocation(defaultLocation);
+        
+        if (mapContainer.current && !map.current) {
+          map.current = new mapboxgl.Map({
+            container: mapContainer.current,
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: [defaultLocation.lng, defaultLocation.lat],
+            zoom: 12,
+          });
+          
+          map.current.addControl(
+            new mapboxgl.NavigationControl(),
+            "top-right"
+          );
+          
+          map.current.on("load", () => {
+            setLoading(false);
+            addVendingMachineMarkers();
+          });
+        }
       }
     };
     
     initializeMap();
+    
+    // Cleanup function
+    return () => {
+      // Remove all markers
+      Object.values(markersRef.current).forEach(marker => marker.remove());
+      
+      // Remove map
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
-
-  // Helper to generate marker positions from machine data
-  const generateMarkerPosition = (machine: VendingMachine, index: number) => {
-    // For this mockup, we'll position markers in a grid pattern
-    const cols = Math.ceil(Math.sqrt(machines.length));
-    const row = Math.floor(index / cols);
-    const col = index % cols;
+  
+  // Add or update markers when machines or selected machine changes
+  useEffect(() => {
+    if (!loading && map.current) {
+      addVendingMachineMarkers();
+    }
+  }, [machines, selectedMachine, loading]);
+  
+  // Function to add vending machine markers to the map
+  const addVendingMachineMarkers = () => {
+    if (!map.current) return;
     
-    const mapWidth = mapRef.current?.clientWidth || 600;
-    const mapHeight = mapRef.current?.clientHeight || 400;
+    // Clear existing markers
+    Object.values(markersRef.current).forEach(marker => marker.remove());
+    markersRef.current = {};
     
-    const margin = 80;
-    const width = mapWidth - (margin * 2);
-    const height = mapHeight - (margin * 2);
-    
-    const x = margin + (col * (width / (cols - 1 || 1)));
-    const y = margin + (row * (height / (cols - 1 || 1)));
-    
-    return { x, y };
+    // Add markers for each machine
+    machines.forEach((machine, index) => {
+      // For this demo, we'll generate positions around the user location
+      // In a real app, you would use actual coordinates from your data
+      const offset = (index + 1) * 0.005;
+      const angle = (index * (360 / machines.length)) * (Math.PI / 180);
+      const lng = (userLocation?.lng || 4.9041) + offset * Math.cos(angle);
+      const lat = (userLocation?.lat || 52.3676) + offset * Math.sin(angle);
+      
+      const isSelected = selectedMachine?.id === machine.id;
+      
+      // Create HTML element for marker
+      const el = document.createElement('div');
+      el.className = `flex items-center justify-center w-8 h-8 rounded-full shadow-sm border-2 transition-colors cursor-pointer ${
+        isSelected 
+          ? "bg-blue-500 border-white" 
+          : machine.isStocked 
+            ? "bg-green-500 border-white"
+            : "bg-red-500 border-white"
+      }`;
+      el.innerHTML = `<span class="text-white font-semibold text-xs">${index + 1}</span>`;
+      
+      // Add click event
+      el.addEventListener('click', () => {
+        if (onSelectMachine) {
+          onSelectMachine(machine);
+        }
+      });
+      
+      // Create and add marker
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([lng, lat])
+        .addTo(map.current!);
+      
+      // Add popup for selected machine
+      if (isSelected) {
+        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+          .setLngLat([lng, lat])
+          .setHTML(`
+            <div class="p-2">
+              <h4 class="font-medium text-sm">${machine.name}</h4>
+              <p class="text-xs text-gray-500">${machine.address}</p>
+            </div>
+          `)
+          .addTo(map.current!);
+          
+        // Fly to the selected marker
+        map.current!.flyTo({
+          center: [lng, lat],
+          zoom: 14,
+          speed: 1.5,
+          essential: true
+        });
+      }
+      
+      // Store marker reference
+      markersRef.current[machine.id] = marker;
+    });
   };
 
   return (
     <div 
-      ref={mapRef}
       className={cn(
-        "relative w-full h-full min-h-[400px] bg-blue-50 rounded-xl overflow-hidden",
+        "relative w-full h-full min-h-[400px] rounded-xl overflow-hidden",
         className
       )}
     >
@@ -87,83 +211,10 @@ const Map: React.FC<MapProps> = ({
         </div>
       ) : (
         <>
-          {/* Map background grid (simulated map) */}
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhlOWZiZiIgb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGU5ZmJmIiBvcGFjaXR5PSIwLjIiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-50" />
-          
-          {/* Machine markers */}
-          {machines.map((machine, index) => {
-            const position = generateMarkerPosition(machine, index);
-            const isSelected = selectedMachine?.id === machine.id;
-            
-            return (
-              <div
-                key={machine.id}
-                className={cn(
-                  "absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300",
-                  isSelected ? "z-10 scale-110" : "z-0 hover:scale-105"
-                )}
-                style={{ 
-                  left: `${position.x}px`, 
-                  top: `${position.y}px` 
-                }}
-                onClick={() => onSelectMachine?.(machine)}
-              >
-                <div 
-                  className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-full shadow-sm border-2 transition-colors",
-                    isSelected 
-                      ? "bg-blue-500 border-white" 
-                      : machine.isStocked 
-                        ? "bg-green-500 border-white"
-                        : "bg-red-500 border-white"
-                  )}
-                >
-                  <span className="text-white font-semibold text-xs">{index + 1}</span>
-                </div>
-                
-                {/* Pop-up for the selected machine */}
-                {isSelected && (
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-elevated p-3 border border-gray-100 animate-scale-in">
-                    <h4 className="font-medium text-sm mb-1 truncate">{machine.name}</h4>
-                    <p className="text-xs text-muted-foreground truncate mb-2">{machine.address}</p>
-                    <StatusBadge 
-                      isStocked={machine.isStocked} 
-                      lastReported={machine.lastReported}
-                      size="sm"
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          
-          {/* User location marker */}
-          {userLocation && (
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-              <div className="relative">
-                <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-white shadow-md"></div>
-                <div className="absolute inset-0 bg-blue-500 rounded-full opacity-30 animate-ping"></div>
-              </div>
-            </div>
-          )}
-          
-          {/* Map controls */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
-            <Button 
-              variant="secondary"
-              size="icon"
-              className="w-10 h-10 rounded-full bg-white shadow-sm hover:bg-gray-50"
-            >
-              <span className="text-xl">+</span>
-            </Button>
-            <Button 
-              variant="secondary"
-              size="icon"
-              className="w-10 h-10 rounded-full bg-white shadow-sm hover:bg-gray-50"
-            >
-              <span className="text-xl">−</span>
-            </Button>
-          </div>
+          <div 
+            ref={mapContainer} 
+            className="absolute inset-0"
+          />
         </>
       )}
     </div>
