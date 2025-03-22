@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BaggageClaim, Menu, X } from "lucide-react";
+import { Compass, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -10,14 +10,16 @@ interface NavBarProps {
   className?: string;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }) => {
+const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot", className }) => {
   const [open, setOpen] = React.useState(false);
   
   return (
     <header className={cn("sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-sm", className)}>
       <div className="container flex h-16 items-center px-4 sm:px-6">
         <div className="flex items-center gap-2 mr-4">
-          <BaggageClaim className="h-6 w-6 text-bread-600" />
+          <div className="flex items-center justify-center h-8 w-8 rounded-md bg-bread-600 text-white">
+            <Compass className="h-5 w-5" />
+          </div>
           <span className="font-medium text-xl hidden sm:inline-block">{title}</span>
         </div>
         
@@ -90,7 +92,9 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot Locator", className }
               <div className="px-1 py-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <BaggageClaim className="h-5 w-5 text-bread-600" />
+                    <div className="flex items-center justify-center h-7 w-7 rounded-md bg-bread-600 text-white">
+                      <Compass className="h-4 w-4" />
+                    </div>
                     <span className="font-medium">{title}</span>
                   </div>
                   <Button
