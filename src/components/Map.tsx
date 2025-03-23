@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { VendingMachine, getUserLocation } from "@/utils/vendingMachines";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-// Using the user-provided Mapbox token
+// Set your Mapbox access token
 mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204a2VtOXhkMHhqZTJrcXI5bjlyZjhsNSJ9.xeo91AG44Yz9q-zp7LEMrg";
 
 interface MapProps {
@@ -27,17 +28,20 @@ const Map: React.FC<MapProps> = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{[key: string]: mapboxgl.Marker}>({});
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({ lat: 51.1074, lng: 4.3674 }); // Default to Reet, Antwerpen
   
   // Initialize map when component mounts
   useEffect(() => {
+    if (!mapContainer.current || mapInitialized) return;
+    
     const initializeMap = async () => {
       try {
         // Get user location
         const location = await getUserLocation();
         setUserLocation(location);
         
-        if (mapContainer.current && !map.current) {
+        if (!map.current) {
           // Create new map instance
           map.current = new mapboxgl.Map({
             container: mapContainer.current,
@@ -52,39 +56,20 @@ const Map: React.FC<MapProps> = ({
             "top-right"
           );
           
-          // Add user location marker
-          new mapboxgl.Marker({
-            color: "#3b82f6",
-            scale: 0.8
-          })
-            .setLngLat([location.lng, location.lat])
-            .addTo(map.current);
-          
-          // Add geolocate control
-          map.current.addControl(
-            new mapboxgl.GeolocateControl({
-              positionOptions: {
-                enableHighAccuracy: true
-              },
-              trackUserLocation: true,
-              showUserHeading: true
-            }),
-            "top-right"
-          );
-          
           // Wait for map to load before adding markers
           map.current.on("load", () => {
             setLoading(false);
+            setMapInitialized(true);
             addVendingMachineMarkers();
           });
         }
       } catch (error) {
         console.error("Error initializing map:", error);
         // Set default location if getUserLocation fails
-        const defaultLocation = { lat: 52.3676, lng: 4.9041 }; // Amsterdam
+        const defaultLocation = { lat: 51.1074, lng: 4.3674 }; // Reet, Antwerpen
         setUserLocation(defaultLocation);
         
-        if (mapContainer.current && !map.current) {
+        if (!map.current && mapContainer.current) {
           map.current = new mapboxgl.Map({
             container: mapContainer.current,
             style: "mapbox://styles/mapbox/streets-v12",
@@ -99,6 +84,7 @@ const Map: React.FC<MapProps> = ({
           
           map.current.on("load", () => {
             setLoading(false);
+            setMapInitialized(true);
             addVendingMachineMarkers();
           });
         }
@@ -118,14 +104,14 @@ const Map: React.FC<MapProps> = ({
         map.current = null;
       }
     };
-  }, []);
+  }, [mapContainer, mapInitialized]);
   
   // Add or update markers when machines or selected machine changes
   useEffect(() => {
-    if (!loading && map.current) {
+    if (!loading && map.current && mapInitialized) {
       addVendingMachineMarkers();
     }
-  }, [machines, selectedMachine, loading]);
+  }, [machines, selectedMachine, loading, mapInitialized]);
   
   // Function to add vending machine markers to the map
   const addVendingMachineMarkers = () => {
@@ -136,14 +122,7 @@ const Map: React.FC<MapProps> = ({
     markersRef.current = {};
     
     // Add markers for each machine
-    machines.forEach((machine, index) => {
-      // For this demo, we'll generate positions around the user location
-      // In a real app, you would use actual coordinates from your data
-      const offset = (index + 1) * 0.005;
-      const angle = (index * (360 / machines.length)) * (Math.PI / 180);
-      const lng = (userLocation?.lng || 4.9041) + offset * Math.cos(angle);
-      const lat = (userLocation?.lat || 52.3676) + offset * Math.sin(angle);
-      
+    machines.forEach((machine) => {
       const isSelected = selectedMachine?.id === machine.id;
       
       // Create HTML element for marker
@@ -155,7 +134,7 @@ const Map: React.FC<MapProps> = ({
             ? "bg-green-500 border-white"
             : "bg-red-500 border-white"
       }`;
-      el.innerHTML = `<span class="text-white font-semibold text-xs">${index + 1}</span>`;
+      el.innerHTML = `<span class="text-white font-semibold text-xs">${machine.id.split('-')[1]}</span>`;
       
       // Add click event
       el.addEventListener('click', () => {
@@ -166,24 +145,24 @@ const Map: React.FC<MapProps> = ({
       
       // Create and add marker
       const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([lng, lat])
+        .setLngLat([machine.longitude, machine.latitude])
         .addTo(map.current!);
       
       // Add popup for selected machine
       if (isSelected) {
         const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
-          .setLngLat([lng, lat])
+          .setLngLat([machine.longitude, machine.latitude])
           .setHTML(`
             <div class="p-2">
               <h4 class="font-medium text-sm">${machine.name}</h4>
-              <p class="text-xs text-gray-500">${machine.address}</p>
+              <p class="text-xs text-gray-500">${machine.address}, ${machine.city}</p>
             </div>
           `)
           .addTo(map.current!);
           
         // Fly to the selected marker
         map.current!.flyTo({
-          center: [lng, lat],
+          center: [machine.longitude, machine.latitude],
           zoom: 14,
           speed: 1.5,
           essential: true

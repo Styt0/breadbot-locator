@@ -58,7 +58,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
         onLocationFound(location);
       }
       
-      // Using the browser's Geocoding API to get location name (if available)
+      // Using the Mapbox Geocoding API to get location name
       try {
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.lng},${location.lat}.json?access_token=${mapboxgl.accessToken}&language=nl`
