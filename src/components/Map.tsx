@@ -53,7 +53,7 @@ const Map: React.FC<MapProps> = ({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const defaultCenter: [number, number] = [52.3676, 4.9041]; // Amsterdam
   const center = selectedMachine
-    ? [selectedMachine.lat, selectedMachine.lng] as [number, number]
+    ? [selectedMachine.latitude, selectedMachine.longitude] as [number, number]
     : userLocation || defaultCenter;
 
   useEffect(() => {
@@ -94,17 +94,15 @@ const Map: React.FC<MapProps> = ({
           const markerIcon = isSelected
             ? createCustomIcon("blue")
             : createCustomIcon(
-                machine.status === "stocked"
+                machine.isStocked
                   ? "green"
-                  : machine.status === "low"
-                  ? "yellow"
                   : "red"
               );
 
           return (
             <Marker
               key={machine.id}
-              position={[machine.lat, machine.lng]}
+              position={[machine.latitude, machine.longitude]}
               icon={markerIcon}
               eventHandlers={{
                 click: () => onSelectMachine(machine),
@@ -116,7 +114,10 @@ const Map: React.FC<MapProps> = ({
                   <p className="text-sm text-gray-600 mb-2">{machine.address}</p>
                   
                   <div className="flex items-center mb-2">
-                    <StatusBadge status={machine.status} />
+                    <StatusBadge 
+                      isStocked={machine.isStocked} 
+                      lastReported={machine.lastReported}
+                    />
                   </div>
                   
                   <div className="flex flex-col space-y-2">
@@ -126,21 +127,21 @@ const Map: React.FC<MapProps> = ({
                       className="w-full"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(getDirectionsUrl(machine.lat, machine.lng), "_blank");
+                        window.open(getDirectionsUrl(machine.latitude, machine.longitude), "_blank");
                       }}
                     >
                       <Navigation className="mr-2 h-4 w-4" />
                       Navigeer
                     </Button>
                     
-                    {machine.website && (
+                    {machine.description && (
                       <Button
                         size="sm"
                         variant="outline"
                         className="w-full"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.open(machine.website, "_blank");
+                          window.open(machine.description, "_blank");
                         }}
                       >
                         <ExternalLink className="mr-2 h-4 w-4" />
