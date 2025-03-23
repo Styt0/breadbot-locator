@@ -1,18 +1,15 @@
+
 import React, { useState } from "react";
 import { MapPin, Locate, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getUserLocation } from "@/utils/vendingMachines";
 import { toast } from "sonner";
-import mapboxgl from "mapbox-gl";
 
 interface LocationSearchProps {
   onLocationFound?: (location: { lat: number; lng: number }) => void;
   className?: string;
 }
-
-// Set the Mapbox access token
-mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204bTVhNWdtMGJ1ZjJpczdreGNzMzY1MiJ9.PPqQP7HVO8ybU6jzLMG4qA";
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ 
   onLocationFound,
@@ -57,21 +54,27 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
         onLocationFound(location);
       }
       
-      // Using the Mapbox Geocoding API to get location name
+      // Using the Nominatim API (OpenStreetMap's geocoding service)
       try {
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.lng},${location.lat}.json?access_token=${mapboxgl.accessToken}&language=nl`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lng}&zoom=18&addressdetails=1`,
+          {
+            headers: {
+              'Accept-Language': 'nl',
+              'User-Agent': 'BroodBot/1.0'
+            }
+          }
         );
         const data = await response.json();
-        if (data.features && data.features.length > 0) {
-          // Get city or location name from the geocoding result
-          const place = data.features.find(
-            (f: any) => f.place_type.includes("place") || f.place_type.includes("locality")
-          );
+        if (data) {
+          // Get city or town name from the geocoding result
+          const place = data.address.city || 
+                        data.address.town || 
+                        data.address.village || 
+                        data.address.hamlet ||
+                        data.display_name.split(',')[0];
           if (place) {
-            setCurrentLocation(place.text);
-          } else {
-            setCurrentLocation(data.features[0].place_name.split(',')[0]);
+            setCurrentLocation(place);
           }
         }
       } catch (geocodeError) {

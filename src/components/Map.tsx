@@ -1,15 +1,51 @@
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
 import { VendingMachine, getUserLocation } from "@/utils/vendingMachines";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-// Set your Mapbox access token
-mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204bTVhNWdtMGJ1ZjJpczdreGNzMzY1MiJ9.PPqQP7HVO8ybU6jzLMG4qA";
+// Fix for Leaflet's default icon
+// We need to manually set the path to the marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+// Custom marker icons
+const createCustomIcon = (isStocked: boolean, isSelected: boolean) => {
+  return L.divIcon({
+    className: "custom-div-icon",
+    html: `<div style="
+      background-color: ${isStocked ? '#10B981' : '#EF4444'};
+      border: 2px solid ${isSelected ? '#3B82F6' : 'white'};
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    "><span style="color: white; font-weight: bold; font-size: 12px;"></span></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+};
+
+// This component updates the map center when it changes
+const ChangeMapView = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+};
 
 interface MapProps {
   machines: VendingMachine[];
@@ -24,155 +60,30 @@ const Map: React.FC<MapProps> = ({
   onSelectMachine,
   className,
 }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<{[key: string]: mapboxgl.Marker}>({});
   const [loading, setLoading] = useState(true);
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({ lat: 51.1074, lng: 4.3674 }); // Default to Reet, Antwerpen
+  const [userLocation, setUserLocation] = useState<[number, number]>([51.1074, 4.3674]); // Default to Reet, Antwerpen
   
-  // Initialize map when component mounts
   useEffect(() => {
-    if (!mapContainer.current || mapInitialized) return;
-    
     const initializeMap = async () => {
       try {
         // Get user location
         const location = await getUserLocation();
-        setUserLocation(location);
-        
-        if (!map.current) {
-          // Create new map instance
-          map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: "mapbox://styles/mapbox/streets-v12",
-            center: [location.lng, location.lat],
-            zoom: 12,
-          });
-          
-          // Add navigation controls
-          map.current.addControl(
-            new mapboxgl.NavigationControl(),
-            "top-right"
-          );
-          
-          // Wait for map to load before adding markers
-          map.current.on("load", () => {
-            setLoading(false);
-            setMapInitialized(true);
-            addVendingMachineMarkers();
-          });
-        }
+        setUserLocation([location.lat, location.lng]);
       } catch (error) {
-        console.error("Error initializing map:", error);
-        // Set default location if getUserLocation fails
-        const defaultLocation = { lat: 51.1074, lng: 4.3674 }; // Reet, Antwerpen
-        setUserLocation(defaultLocation);
-        
-        if (!map.current && mapContainer.current) {
-          map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: "mapbox://styles/mapbox/streets-v12",
-            center: [defaultLocation.lng, defaultLocation.lat],
-            zoom: 12,
-          });
-          
-          map.current.addControl(
-            new mapboxgl.NavigationControl(),
-            "top-right"
-          );
-          
-          map.current.on("load", () => {
-            setLoading(false);
-            setMapInitialized(true);
-            addVendingMachineMarkers();
-          });
-        }
+        console.error("Error getting user location:", error);
+        // Default to Reet, Antwerpen if location fails
+      } finally {
+        setLoading(false);
       }
     };
     
     initializeMap();
-    
-    // Cleanup function
-    return () => {
-      // Remove all markers
-      Object.values(markersRef.current).forEach(marker => marker.remove());
-      
-      // Remove map
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, [mapContainer, mapInitialized]);
-  
-  // Add or update markers when machines or selected machine changes
-  useEffect(() => {
-    if (!loading && map.current && mapInitialized) {
-      addVendingMachineMarkers();
-    }
-  }, [machines, selectedMachine, loading, mapInitialized]);
-  
-  // Function to add vending machine markers to the map
-  const addVendingMachineMarkers = () => {
-    if (!map.current) return;
-    
-    // Clear existing markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
-    markersRef.current = {};
-    
-    // Add markers for each machine
-    machines.forEach((machine) => {
-      const isSelected = selectedMachine?.id === machine.id;
-      
-      // Create HTML element for marker
-      const el = document.createElement('div');
-      el.className = `flex items-center justify-center w-8 h-8 rounded-full shadow-sm border-2 transition-colors cursor-pointer ${
-        isSelected 
-          ? "bg-blue-500 border-white" 
-          : machine.isStocked 
-            ? "bg-green-500 border-white"
-            : "bg-red-500 border-white"
-      }`;
-      el.innerHTML = `<span class="text-white font-semibold text-xs">${machine.id.split('-')[1]}</span>`;
-      
-      // Add click event
-      el.addEventListener('click', () => {
-        if (onSelectMachine) {
-          onSelectMachine(machine);
-        }
-      });
-      
-      // Create and add marker
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([machine.longitude, machine.latitude])
-        .addTo(map.current!);
-      
-      // Add popup for selected machine
-      if (isSelected) {
-        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
-          .setLngLat([machine.longitude, machine.latitude])
-          .setHTML(`
-            <div class="p-2">
-              <h4 class="font-medium text-sm">${machine.name}</h4>
-              <p class="text-xs text-gray-500">${machine.address}, ${machine.city}</p>
-            </div>
-          `)
-          .addTo(map.current!);
-          
-        // Fly to the selected marker
-        map.current!.flyTo({
-          center: [machine.longitude, machine.latitude],
-          zoom: 14,
-          speed: 1.5,
-          essential: true
-        });
-      }
-      
-      // Store marker reference
-      markersRef.current[machine.id] = marker;
-    });
-  };
+  }, []);
+
+  // Set center based on selected machine or user location
+  const mapCenter = selectedMachine 
+    ? [selectedMachine.latitude, selectedMachine.longitude] as [number, number]
+    : userLocation;
 
   return (
     <div 
@@ -187,12 +98,48 @@ const Map: React.FC<MapProps> = ({
           <p className="text-muted-foreground">Kaart laden...</p>
         </div>
       ) : (
-        <>
-          <div 
-            ref={mapContainer} 
-            className="absolute inset-0"
+        <MapContainer 
+          center={mapCenter} 
+          zoom={13} 
+          style={{ height: "100%", width: "100%" }}
+          className="z-0"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-        </>
+          
+          <ChangeMapView center={mapCenter} />
+          
+          {machines.map((machine) => (
+            <Marker
+              key={machine.id}
+              position={[machine.latitude, machine.longitude]}
+              icon={createCustomIcon(machine.isStocked, selectedMachine?.id === machine.id)}
+              eventHandlers={{
+                click: () => {
+                  if (onSelectMachine) {
+                    onSelectMachine(machine);
+                  }
+                },
+              }}
+            >
+              <Popup>
+                <div className="p-1">
+                  <h4 className="font-medium text-sm">{machine.name}</h4>
+                  <p className="text-xs text-gray-500">{machine.address}, {machine.city}</p>
+                  <div className="mt-2">
+                    <StatusBadge 
+                      isStocked={machine.isStocked} 
+                      lastReported={machine.lastReported}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
       )}
     </div>
   );
