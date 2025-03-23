@@ -5,11 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getUserLocation } from "@/utils/vendingMachines";
 import { toast } from "sonner";
+import mapboxgl from "mapbox-gl";
 
 interface LocationSearchProps {
   onLocationFound?: (location: { lat: number; lng: number }) => void;
   className?: string;
 }
+
+// Set the Mapbox access token
+mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204a2VtOXhkMHhqZTJrcXI5bjlyZjhsNSJ9.xeo91AG44Yz9q-zp7LEMrg";
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ 
   onLocationFound,
