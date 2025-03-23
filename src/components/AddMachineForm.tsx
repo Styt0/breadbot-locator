@@ -41,7 +41,7 @@ const AddMachineForm: React.FC<AddMachineFormProps> = ({ onSuccess, className })
     defaultValues: {
       name: "",
       address: "",
-      city: "Amsterdam",
+      city: "Reet, Antwerpen",
     },
   });
 
@@ -152,7 +152,7 @@ const AddMachineForm: React.FC<AddMachineFormProps> = ({ onSuccess, className })
                 <FormLabel>Stad</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Bijv. Utrecht"
+                    placeholder="Bijv. Reet, Antwerpen"
                     {...field}
                     disabled={submitting}
                   />

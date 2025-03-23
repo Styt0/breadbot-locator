@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistance, formatRelative } from "date-fns";
@@ -74,8 +75,8 @@ export const getUserLocation = async (): Promise<{ lat: number; lng: number }> =
           },
           (error) => {
             console.error("Browser geolocation error:", error);
-            // Fallback to Amsterdam on error
-            resolve({ lat: 52.3676, lng: 4.9041 });
+            // Fallback to Reet, Antwerpen on error (coordinates for Reet, Antwerpen, Belgium)
+            resolve({ lat: 51.1074, lng: 4.3674 });
           },
           { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
@@ -84,10 +85,10 @@ export const getUserLocation = async (): Promise<{ lat: number; lng: number }> =
 
     // Fallback if geolocation is not available
     console.log("Geolocation not available, using default location");
-    return { lat: 52.3676, lng: 4.9041 };
+    return { lat: 51.1074, lng: 4.3674 }; // Fallback to Reet, Antwerpen
   } catch (error) {
     console.error("Error in getUserLocation:", error);
-    return { lat: 52.3676, lng: 4.9041 }; // Fallback to Amsterdam
+    return { lat: 51.1074, lng: 4.3674 }; // Fallback to Reet, Antwerpen
   }
 };
 
@@ -97,9 +98,9 @@ const mockMachines: VendingMachine[] = [
     id: "vm-001",
     name: "Bakkerij Janssen Automaat",
     address: "Stationsstraat 12",
-    city: "Amsterdam",
-    latitude: 52.3676,
-    longitude: 4.9041,
+    city: "Reet, Antwerpen",
+    latitude: 51.1074,
+    longitude: 4.3674,
     isStocked: true,
     lastReported: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
     description: "Verse broodjes en croissants. Dagelijks bijgevuld om 7:00 en 16:00.",
@@ -110,9 +111,9 @@ const mockMachines: VendingMachine[] = [
     id: "vm-002",
     name: "Vers & Lekker",
     address: "Marktplein 5",
-    city: "Utrecht",
-    latitude: 52.0907,
-    longitude: 5.1214,
+    city: "Reet, Antwerpen",
+    latitude: 51.1097,
+    longitude: 4.3710,
     isStocked: false,
     lastReported: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
     description: "Biologische broodjes en gebak van lokale bakkers.",
@@ -188,7 +189,7 @@ export const getVendingMachinesInRadius = async (
   // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  // If no coordinates provided, use geolocation or default to Amsterdam
+  // If no coordinates provided, use geolocation or default to Reet, Antwerpen
   if (!lat || !lng) {
     // In a real app, we would use the browser's geolocation
     try {
@@ -196,8 +197,8 @@ export const getVendingMachinesInRadius = async (
       lat = location.lat;
       lng = location.lng;
     } catch {
-      lat = 52.3676;
-      lng = 4.9041;
+      lat = 51.1074;
+      lng = 4.3674; // Reet, Antwerpen coordinates
     }
   }
   
@@ -241,9 +242,9 @@ export const getClosestVendingMachines = async (
       })
       .slice(0, limit);
   } catch {
-    // Fallback to default location
-    const userLat = 52.3676;
-    const userLng = 4.9041;
+    // Fallback to default location (Reet, Antwerpen)
+    const userLat = 51.1074;
+    const userLng = 4.3674;
     
     return [...mockMachines]
       .sort((a, b) => {

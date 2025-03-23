@@ -21,19 +21,19 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [isLocating, setIsLocating] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<string | null>("Reet, Antwerpen");
 
   // Educated guess of user location based on browser language or timezone
   React.useEffect(() => {
     try {
       // Try to guess location based on browser language
       const language = navigator.language;
-      let guessedLocation = "Nederland"; // Default
+      let guessedLocation = "Reet, Antwerpen"; // Default to Reet, Antwerpen
 
       if (language.includes("nl")) {
-        guessedLocation = "Nederland";
+        guessedLocation = "Reet, Antwerpen";
       } else if (language.includes("be")) {
-        guessedLocation = "België";
+        guessedLocation = "Reet, Antwerpen";
       } else if (language.includes("de")) {
         guessedLocation = "Deutschland";
       } else if (language.includes("fr")) {
@@ -46,7 +46,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       
     } catch (error) {
       console.error("Error guessing location:", error);
-      setCurrentLocation("Nederland");
+      setCurrentLocation("Reet, Antwerpen");
     }
   }, []);
 
