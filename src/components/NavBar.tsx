@@ -61,21 +61,6 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot", className }) => {
         </nav>
         
         <div className="flex items-center gap-2 ml-auto">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-sm hidden md:flex"
-          >
-            Inloggen
-          </Button>
-          
-          <Button
-            size="sm"
-            className="text-sm hidden md:flex bg-bread-600 hover:bg-bread-700"
-          >
-            Registreren
-          </Button>
-          
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
@@ -134,21 +119,6 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot", className }) => {
                     Over
                   </a>
                 </nav>
-                
-                <div className="flex flex-col gap-2 mt-8">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-center"
-                  >
-                    Inloggen
-                  </Button>
-                  
-                  <Button
-                    className="w-full justify-center bg-bread-600 hover:bg-bread-700"
-                  >
-                    Registreren
-                  </Button>
-                </div>
               </div>
             </SheetContent>
           </Sheet>

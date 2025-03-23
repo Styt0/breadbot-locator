@@ -8,6 +8,7 @@ import Map from "@/components/Map";
 import VendingMachineList from "@/components/VendingMachineList";
 import VendingMachineCard from "@/components/VendingMachineCard";
 import AddMachineForm from "@/components/AddMachineForm";
+import LocationSearch from "@/components/LocationSearch";
 import { 
   VendingMachine, 
   getVendingMachines, 
@@ -23,6 +24,7 @@ const Index = () => {
   const [closestMachines, setClosestMachines] = useState<VendingMachine[]>([]);
   const [selectedMachine, setSelectedMachine] = useState<VendingMachine | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     const loadAllMachines = async () => {
@@ -43,11 +45,15 @@ const Index = () => {
     loadAllMachines();
   }, []);
 
-  const refreshMachines = async () => {
+  const refreshMachines = async (location?: { lat: number; lng: number }) => {
     try {
       setLoading(true);
       
-      const allMachines = await getVendingMachinesInRadius(20);
+      if (location) {
+        setUserLocation(location);
+      }
+      
+      const allMachines = await getVendingMachinesInRadius(20, location?.lat, location?.lng);
       setMachines(allMachines);
       
       const nearest = await getClosestVendingMachines(5);
@@ -60,6 +66,10 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLocationFound = (location: { lat: number; lng: number }) => {
+    refreshMachines(location);
   };
 
   const handleAddMachine = () => {
@@ -90,13 +100,18 @@ const Index = () => {
           <h1 className="text-3xl font-medium tracking-tight md:text-4xl mb-3">
             Vind de dichtstbijzijnde broodautomaat
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="text-muted-foreground max-w-2xl mb-6">
             Ontdek broodautomaten in je buurt, bekijk of ze nog gevuld zijn, 
             of voeg nieuwe automaten toe om anderen te helpen.
           </p>
           
+          <LocationSearch 
+            onLocationFound={handleLocationFound}
+            className="mb-6"
+          />
+          
           <div className="mt-6">
-            <div className="flex items-center mb-4">
+            <div className="flex items-center mb-4 cursor-pointer" onClick={() => handleLocationFound(userLocation || { lat: 52.3676, lng: 4.9041 })}>
               <Navigation className="mr-2 h-5 w-5 text-blue-500" />
               <h2 className="text-xl font-medium">Dichtst bij jou</h2>
             </div>
@@ -156,7 +171,7 @@ const Index = () => {
             <Button 
               variant="outline"
               size="sm"
-              onClick={refreshMachines}
+              onClick={() => refreshMachines()}
               disabled={loading}
               className="hidden sm:flex"
             >
@@ -200,7 +215,7 @@ const Index = () => {
       
       <footer className="border-t py-6 bg-white">
         <div className="container px-4 text-center text-sm text-muted-foreground">
-          <p>© 2023 BroodBot Locator - Vind eenvoudig broodautomaten in je buurt</p>
+          <p>© 2023 BroodBot - Vind eenvoudig broodautomaten in je buurt</p>
         </div>
       </footer>
     </div>
