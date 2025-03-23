@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MapPin, Locate, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ interface LocationSearchProps {
 }
 
 // Set the Mapbox access token
-mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204a2VtOXhkMHhqZTJrcXI5bjlyZjhsNSJ9.xeo91AG44Yz9q-zp7LEMrg";
+mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204bTVhNWdtMGJ1ZjJpczdreGNzMzY1MiJ9.PPqQP7HVO8ybU6jzLMG4qA";
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ 
   onLocationFound,
