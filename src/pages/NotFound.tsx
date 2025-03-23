@@ -1,4 +1,3 @@
-
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
@@ -43,7 +42,7 @@ const NotFound = () => {
       
       <footer className="border-t py-6 bg-white">
         <div className="container px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 BroodBot Locator - Vind eenvoudig broodautomaten in je buurt</p>
+          <p>© 2025 BroodBot Locator - Vind eenvoudig broodautomaten in je buurt</p>
         </div>
       </footer>
     </div>

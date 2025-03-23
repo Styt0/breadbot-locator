@@ -214,7 +214,7 @@ const Index = () => {
       
       <footer className="border-t py-6 bg-white">
         <div className="container px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 BroodBot - Vind eenvoudig broodautomaten in je buurt</p>
+          <p>© 2025 BroodBot - Vind eenvoudig broodautomaten in je buurt</p>
         </div>
       </footer>
     </div>

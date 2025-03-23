@@ -78,13 +78,13 @@ const Map: React.FC<MapProps> = ({
     <div className={cn("relative w-full h-full", className)}>
       <MapContainer
         className="h-full w-full"
-        center={defaultCenter}
+        center={center}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         <SetViewOnChange coords={center} />
@@ -169,7 +169,8 @@ const Map: React.FC<MapProps> = ({
         )}
       </MapContainer>
 
-      <style jsx>{`
+      <style>
+        {`
         .pulse-animation {
           animation: pulse 1.5s infinite;
         }
@@ -187,7 +188,8 @@ const Map: React.FC<MapProps> = ({
             box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
           }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
