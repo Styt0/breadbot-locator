@@ -78,13 +78,13 @@ const Map: React.FC<MapProps> = ({
     <div className={cn("relative w-full h-full", className)}>
       <MapContainer
         className="h-full w-full"
-        center={center}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
+        center={center}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
         <SetViewOnChange coords={center} />
@@ -103,7 +103,6 @@ const Map: React.FC<MapProps> = ({
             <Marker
               key={machine.id}
               position={[machine.latitude, machine.longitude]}
-              icon={markerIcon}
               eventHandlers={{
                 click: () => onSelectMachine(machine),
               }}
@@ -158,12 +157,6 @@ const Map: React.FC<MapProps> = ({
         {userLocation && (
           <Marker
             position={userLocation}
-            icon={L.divIcon({
-              className: "custom-icon",
-              html: `<div class="marker-pin bg-blue-500 border-2 border-white rounded-full w-6 h-6 flex items-center justify-center shadow-md pulse-animation"></div>`,
-              iconSize: [24, 24],
-              iconAnchor: [12, 24],
-            })}
           >
             <Popup>Jouw locatie</Popup>
           </Marker>
