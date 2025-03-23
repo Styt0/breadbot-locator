@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,8 @@ import { VendingMachine, getUserLocation } from "@/utils/vendingMachines";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-// Temporary mapbox token - in production, this should be stored securely
-// This is a public token that can be included directly in client-side code
-mapboxgl.accessToken = "pk.eyJ1IjoibG92YWJsZS1haS1leGFtcGxlIiwiYSI6ImNsbWV3Z2FzcjA0YjgyanJ3dWdscWRzNTAifQ.pl6FEubPvEFRgzAGMBtaig";
+// Using the user-provided Mapbox token
+mapboxgl.accessToken = "pk.eyJ1Ijoic3R5dG8iLCJhIjoiY204a2VtOXhkMHhqZTJrcXI5bjlyZjhsNSJ9.xeo91AG44Yz9q-zp7LEMrg";
 
 interface MapProps {
   machines: VendingMachine[];
