@@ -23,6 +23,18 @@ export interface VendingMachine {
   comment?: string; // New property for user comments
 }
 
+// Interface for adding a new vending machine
+export interface NewVendingMachine {
+  name: string;
+  address: string;
+  city: string;
+  isStocked: boolean;
+  location: { lat: number; lng: number };
+  description?: string;
+  openingHours?: string;
+  image?: string;
+}
+
 // Format relative time since last update (e.g. "5 minutes ago")
 export const formatRelativeTime = (date: Date): string => {
   return formatRelative(date, new Date(), {
@@ -91,6 +103,36 @@ export const getUserLocation = async (): Promise<{ lat: number; lng: number }> =
     console.error("Error in getUserLocation:", error);
     return { lat: 51.1074, lng: 4.3674 }; // Fallback to Reet, Antwerpen
   }
+};
+
+// Add a new vending machine
+export const addVendingMachine = async (machine: NewVendingMachine): Promise<VendingMachine> => {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Generate a new unique ID
+  const newId = `vm-${String(mockMachines.length + 1).padStart(3, '0')}`;
+  
+  // Create the new machine object
+  const newMachine: VendingMachine = {
+    id: newId,
+    name: machine.name,
+    address: machine.address,
+    city: machine.city,
+    latitude: machine.location.lat,
+    longitude: machine.location.lng,
+    isStocked: machine.isStocked,
+    lastReported: new Date(),
+    description: machine.description,
+    openingHours: machine.openingHours,
+    image: machine.image || "https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80", // Default image
+    stockLevel: machine.isStocked ? "full" : "empty"
+  };
+  
+  // Add to the mock machines array
+  mockMachines.push(newMachine);
+  
+  return newMachine;
 };
 
 // Mock data for development
