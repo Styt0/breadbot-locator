@@ -1,70 +1,108 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { AlertTriangle, Clock, CheckCircle2, XCircle } from "lucide-react";
 
 interface StatusBadgeProps {
   isStocked: boolean;
-  lastReported?: Date;
+  lastReported: Date;
+  stockLevel?: "full" | "low" | "empty";
   size?: "sm" | "md" | "lg";
-  className?: string;
   onClick?: (e: React.MouseEvent) => void;
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({
   isStocked,
   lastReported,
+  stockLevel,
   size = "md",
-  className,
   onClick,
 }) => {
-  // Size mappings for Tailwind classes
-  const sizeClasses = {
-    sm: "text-xs px-2 py-0.5 gap-1",
-    md: "text-sm px-2.5 py-1 gap-1.5",
-    lg: "text-base px-3 py-1.5 gap-2",
+  // Determine status time
+  const now = new Date();
+  const diffMinutes = Math.floor((now.getTime() - lastReported.getTime()) / (1000 * 60));
+  
+  // If it's been more than 4 hours, consider the status as "unknown"
+  const isRecent = diffMinutes < 240;
+  
+  // Get status
+  const getStatus = () => {
+    // If the report is not recent enough, show unknown status
+    if (!isRecent) return "unknown";
+    
+    // If we have a specific stock level, use that
+    if (stockLevel) return stockLevel;
+    
+    // Otherwise, fall back to the basic stocked/not stocked status
+    return isStocked ? "full" : "empty";
   };
-
-  // Time since last report in minutes
-  const timeSinceReport = lastReported
-    ? Math.floor((Date.now() - lastReported.getTime()) / (1000 * 60))
-    : null;
-
-  // Determine if the status is stale (older than 3 hours)
-  const isStale = timeSinceReport !== null && timeSinceReport > 180;
-
-  // Adjust status colors based on stale status
-  const statusColor = isStale
-    ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-    : isStocked
-    ? "bg-green-50 text-green-700 border-green-100"
-    : "bg-red-50 text-red-700 border-red-100";
-
+  
+  const status = getStatus();
+  
+  // Get badge config based on status
+  const getBadgeConfig = () => {
+    switch (status) {
+      case "full":
+        return {
+          bgColor: "bg-green-500",
+          textColor: "text-white",
+          icon: <CheckCircle2 className={cn(
+            "mr-1",
+            size === "sm" ? "h-3 w-3" : size === "md" ? "h-3.5 w-3.5" : "h-4 w-4"
+          )} />,
+          text: "Voldoende voorraad"
+        };
+      case "low":
+        return {
+          bgColor: "bg-amber-500",
+          textColor: "text-white",
+          icon: <AlertTriangle className={cn(
+            "mr-1",
+            size === "sm" ? "h-3 w-3" : size === "md" ? "h-3.5 w-3.5" : "h-4 w-4"
+          )} />,
+          text: "Bijna leeg"
+        };
+      case "empty":
+        return {
+          bgColor: "bg-red-500",
+          textColor: "text-white",
+          icon: <XCircle className={cn(
+            "mr-1",
+            size === "sm" ? "h-3 w-3" : size === "md" ? "h-3.5 w-3.5" : "h-4 w-4"
+          )} />,
+          text: "Leeg"
+        };
+      case "unknown":
+      default:
+        return {
+          bgColor: "bg-gray-400",
+          textColor: "text-white",
+          icon: <Clock className={cn(
+            "mr-1",
+            size === "sm" ? "h-3 w-3" : size === "md" ? "h-3.5 w-3.5" : "h-4 w-4"
+          )} />,
+          text: "Onbekend"
+        };
+    }
+  };
+  
+  const { bgColor, textColor, icon, text } = getBadgeConfig();
+  
   return (
-    <div
+    <div 
       className={cn(
-        "inline-flex items-center rounded-full border font-medium transition-colors",
-        statusColor,
-        sizeClasses[size],
-        onClick ? "cursor-pointer hover:opacity-80" : "",
-        className
+        "flex items-center rounded-full px-2 py-1",
+        bgColor,
+        textColor,
+        onClick ? "cursor-pointer hover:opacity-90" : "",
+        size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"
       )}
       onClick={onClick}
     >
-      {isStale ? (
-        <Clock className="shrink-0" size={size === "sm" ? 12 : size === "md" ? 14 : 16} />
-      ) : isStocked ? (
-        <CheckCircle className="shrink-0" size={size === "sm" ? 12 : size === "md" ? 14 : 16} />
-      ) : (
-        <XCircle className="shrink-0" size={size === "sm" ? 12 : size === "md" ? 14 : 16} />
-      )}
-      
-      <span>
-        {isStale 
-          ? "Status verouderd" 
-          : isStocked 
-            ? "Gevuld" 
-            : "Leeg"}
+      {icon}
+      <span className={cn(
+        size === "sm" ? "text-[10px]" : size === "md" ? "text-xs" : "text-sm"
+      )}>
+        {size === "sm" ? (status === "full" ? "Vol" : status === "low" ? "Bijna leeg" : status === "empty" ? "Leeg" : "?") : text}
       </span>
     </div>
   );

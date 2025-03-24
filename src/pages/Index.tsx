@@ -10,6 +10,7 @@ import VendingMachineCard from "@/components/VendingMachineCard";
 import AddMachineForm from "@/components/AddMachineForm";
 import LocationSearch from "@/components/LocationSearch";
 import UserProfile from "@/components/UserProfile";
+import NearbyMachineSuggestion from "@/components/NearbyMachineSuggestion";
 import { UserBadge } from "@/components/BadgeSystem";
 import { 
   VendingMachine, 
@@ -58,6 +59,13 @@ const MOCK_USER_BADGES: UserBadge[] = [
     name: "Broodexpert",
     description: "25 broodautomaten bijgewerkt",
     icon: "trophy",
+    earned: false
+  },
+  {
+    id: "badge-6",
+    name: "Fotograaf",
+    description: "Eerste foto van een broodautomaat",
+    icon: "star",
     earned: false
   }
 ];
@@ -176,6 +184,16 @@ const Index = () => {
                 badges={MOCK_USER_BADGES}
               />
             </div>
+          </div>
+          
+          {/* Auto-suggest nearest machine */}
+          <div className="mb-6">
+            <NearbyMachineSuggestion 
+              onSelectMachine={(machine) => {
+                setSelectedMachine(machine);
+                setActiveTab("map");
+              }}
+            />
           </div>
           
           <div className="mt-6">

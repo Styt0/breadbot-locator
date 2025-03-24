@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistance, formatRelative } from "date-fns";
@@ -20,6 +19,8 @@ export interface VendingMachine {
   openingHours?: string;
   image?: string;
   distance?: number; // Adding distance property for showing in UI
+  stockLevel?: "full" | "low" | "empty"; // New property for more detailed stock status
+  comment?: string; // New property for user comments
 }
 
 // Format relative time since last update (e.g. "5 minutes ago")
@@ -102,10 +103,12 @@ const mockMachines: VendingMachine[] = [
     latitude: 51.1074,
     longitude: 4.3674,
     isStocked: true,
+    stockLevel: "full",
     lastReported: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
     description: "Verse broodjes en croissants. Dagelijks bijgevuld om 7:00 en 16:00.",
     openingHours: "24/7",
-    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80"
+    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80",
+    comment: "Verse baguettes, net bijgevuld!"
   },
   {
     id: "vm-002",
@@ -115,10 +118,12 @@ const mockMachines: VendingMachine[] = [
     latitude: 51.1097,
     longitude: 4.3710,
     isStocked: false,
+    stockLevel: "empty",
     lastReported: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
     description: "Biologische broodjes en gebak van lokale bakkers.",
     openingHours: "Ma-Za: 6:00-22:00, Zo: 7:00-21:00",
-    image: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1632&q=80"
+    image: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1632&q=80",
+    comment: "Helemaal leeg, morgenochtend weer aangevuld."
   },
   {
     id: "vm-003",
@@ -128,6 +133,7 @@ const mockMachines: VendingMachine[] = [
     latitude: 51.9225,
     longitude: 4.4792,
     isStocked: true,
+    stockLevel: "low",
     lastReported: new Date(Date.now() - 1000 * 60 * 240), // 4 hours ago
     description: "Snelle service voor onderweg. Broodjes, koffie en snacks.",
     openingHours: "24/7",
@@ -178,6 +184,83 @@ const mockMachines: VendingMachine[] = [
 export const getVendingMachines = (): VendingMachine[] => {
   // In a real app, this would fetch from an API
   return mockMachines;
+};
+
+// Update vending machine status
+export const updateVendingMachineStatus = async (
+  id: string,
+  isStocked: boolean,
+  stockLevel?: "full" | "low" | "empty",
+  comment?: string
+): Promise<VendingMachine> => {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Find and update the machine
+  const machineIndex = mockMachines.findIndex(m => m.id === id);
+  
+  if (machineIndex === -1) {
+    throw new Error("Vending machine not found");
+  }
+  
+  // Update the machine
+  mockMachines[machineIndex] = {
+    ...mockMachines[machineIndex],
+    isStocked,
+    stockLevel: stockLevel || (isStocked ? "full" : "empty"),
+    lastReported: new Date(),
+    ...(comment !== undefined && { comment })
+  };
+  
+  return mockMachines[machineIndex];
+};
+
+// Add a photo to a vending machine
+export const addPhotoToVendingMachine = async (
+  id: string,
+  photoUrl: string
+): Promise<VendingMachine> => {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Find and update the machine
+  const machineIndex = mockMachines.findIndex(m => m.id === id);
+  
+  if (machineIndex === -1) {
+    throw new Error("Vending machine not found");
+  }
+  
+  // Update the machine
+  mockMachines[machineIndex] = {
+    ...mockMachines[machineIndex],
+    image: photoUrl
+  };
+  
+  return mockMachines[machineIndex];
+};
+
+// Add a comment to a vending machine
+export const addCommentToVendingMachine = async (
+  id: string,
+  comment: string
+): Promise<VendingMachine> => {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Find and update the machine
+  const machineIndex = mockMachines.findIndex(m => m.id === id);
+  
+  if (machineIndex === -1) {
+    throw new Error("Vending machine not found");
+  }
+  
+  // Update the machine
+  mockMachines[machineIndex] = {
+    ...mockMachines[machineIndex],
+    comment
+  };
+  
+  return mockMachines[machineIndex];
 };
 
 // Get vending machines within a specific radius (in km)
@@ -260,57 +343,6 @@ export const getClosestVendingMachines = async (
       })
       .slice(0, limit);
   }
-};
-
-// Update vending machine status
-export const updateVendingMachineStatus = async (
-  id: string,
-  isStocked: boolean
-): Promise<VendingMachine> => {
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Find and update the machine
-  const machineIndex = mockMachines.findIndex(m => m.id === id);
-  
-  if (machineIndex === -1) {
-    throw new Error("Vending machine not found");
-  }
-  
-  // Update the machine
-  mockMachines[machineIndex] = {
-    ...mockMachines[machineIndex],
-    isStocked,
-    lastReported: new Date()
-  };
-  
-  return mockMachines[machineIndex];
-};
-
-// Add a new vending machine
-export const addVendingMachine = async (
-  machine: Omit<VendingMachine, "id" | "lastReported" | "latitude" | "longitude"> & 
-    { location?: { lat: number; lng: number } }
-): Promise<VendingMachine> => {
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Use provided location or default to Amsterdam
-  const location = machine.location || { lat: 52.3676, lng: 4.9041 };
-  
-  // Create new machine with generated ID
-  const newMachine: VendingMachine = {
-    ...machine,
-    id: `vm-${String(mockMachines.length + 1).padStart(3, '0')}`,
-    lastReported: new Date(),
-    latitude: location.lat,
-    longitude: location.lng,
-  };
-  
-  // Add to mock database
-  mockMachines.push(newMachine);
-  
-  return newMachine;
 };
 
 // Get a single vending machine by ID

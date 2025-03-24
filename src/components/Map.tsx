@@ -79,8 +79,8 @@ const Map: React.FC<MapProps> = ({
       <MapContainer
         className="h-full w-full"
         style={{ height: "100%", width: "100%" }}
-        zoom={13}
         center={center}
+        zoom={13}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -103,6 +103,7 @@ const Map: React.FC<MapProps> = ({
             <Marker
               key={machine.id}
               position={[machine.latitude, machine.longitude]}
+              icon={markerIcon}
               eventHandlers={{
                 click: () => onSelectMachine(machine),
               }}
@@ -157,6 +158,12 @@ const Map: React.FC<MapProps> = ({
         {userLocation && (
           <Marker
             position={userLocation}
+            icon={L.divIcon({
+              className: "custom-icon",
+              html: `<div class="marker-pin bg-blue-500 border-2 border-white rounded-full w-6 h-6 flex items-center justify-center shadow-md pulse-animation"></div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 24],
+            })}
           >
             <Popup>Jouw locatie</Popup>
           </Marker>
