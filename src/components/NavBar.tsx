@@ -33,30 +33,6 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot", className }) => {
                 Automaten
               </a>
             </li>
-            <li>
-              <a 
-                href="#" 
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                In de buurt
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#" 
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                Toevoegen
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#" 
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                Over
-              </a>
-            </li>
           </ul>
         </nav>
         
@@ -99,24 +75,6 @@ const NavBar: React.FC<NavBarProps> = ({ title = "BroodBot", className }) => {
                     className="py-2 text-base font-medium transition-colors hover:text-primary"
                   >
                     Automaten
-                  </a>
-                  <a 
-                    href="#" 
-                    className="py-2 text-base font-medium text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    In de buurt
-                  </a>
-                  <a 
-                    href="#" 
-                    className="py-2 text-base font-medium text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    Toevoegen
-                  </a>
-                  <a 
-                    href="#" 
-                    className="py-2 text-base font-medium text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    Over
                   </a>
                 </nav>
               </div>
