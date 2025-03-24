@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import VendingMachineList from "@/components/VendingMachineList";
 import VendingMachineCard from "@/components/VendingMachineCard";
 import AddMachineForm from "@/components/AddMachineForm";
 import LocationSearch from "@/components/LocationSearch";
+import UserProfile from "@/components/UserProfile";
+import { UserBadge } from "@/components/BadgeSystem";
 import { 
   VendingMachine, 
   getVendingMachines, 
@@ -17,6 +20,48 @@ import {
 } from "@/utils/vendingMachines";
 import { toast } from "sonner";
 
+// Mock user data for the gamification system
+const MOCK_USER_BADGES: UserBadge[] = [
+  {
+    id: "badge-1",
+    name: "Eerste Update",
+    description: "Je eerste status update van een broodautomaat",
+    icon: "trophy",
+    earned: true,
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5)
+  },
+  {
+    id: "badge-2",
+    name: "Verse Ogen",
+    description: "Eerste persoon die een verse voorraad meldt",
+    icon: "star",
+    earned: true,
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2)
+  },
+  {
+    id: "badge-3",
+    name: "Vijf Updates",
+    description: "5 broodautomaten bijgewerkt",
+    icon: "award",
+    earned: true,
+    date: new Date(Date.now() - 1000 * 60 * 60 * 12)
+  },
+  {
+    id: "badge-4",
+    name: "Tien Updates",
+    description: "10 broodautomaten bijgewerkt",
+    icon: "award",
+    earned: false
+  },
+  {
+    id: "badge-5",
+    name: "Broodexpert",
+    description: "25 broodautomaten bijgewerkt",
+    icon: "trophy",
+    earned: false
+  }
+];
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState("map");
   const [machines, setMachines] = useState<VendingMachine[]>([]);
@@ -24,6 +69,10 @@ const Index = () => {
   const [selectedMachine, setSelectedMachine] = useState<VendingMachine | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Mock user stats
+  const [userPoints, setUserPoints] = useState(135);
+  const [contributionCount, setContributionCount] = useState(5);
 
   useEffect(() => {
     const loadAllMachines = async () => {
@@ -74,6 +123,10 @@ const Index = () => {
   const handleAddMachine = () => {
     refreshMachines();
     setActiveTab("map");
+    
+    // Add points for contributing a new machine
+    setUserPoints(prev => prev + 50);
+    setContributionCount(prev => prev + 1);
   };
 
   const handleStatusChange = (machine: VendingMachine) => {
@@ -88,6 +141,10 @@ const Index = () => {
     if (selectedMachine?.id === machine.id) {
       setSelectedMachine(machine);
     }
+    
+    // Add points for updating status
+    setUserPoints(prev => prev + 10);
+    setContributionCount(prev => prev + 1);
   };
 
   return (
@@ -104,10 +161,22 @@ const Index = () => {
             of voeg nieuwe automaten toe om anderen te helpen.
           </p>
           
-          <LocationSearch 
-            onLocationFound={handleLocationFound}
-            className="mb-6"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="md:col-span-3">
+              <LocationSearch 
+                onLocationFound={handleLocationFound}
+              />
+            </div>
+            <div className="md:col-span-1">
+              <UserProfile 
+                username="BroodLiefhebber"
+                points={userPoints}
+                contributionCount={contributionCount}
+                level={Math.floor(userPoints / 100) + 1}
+                badges={MOCK_USER_BADGES}
+              />
+            </div>
+          </div>
           
           <div className="mt-6">
             <div className="flex items-center mb-4 cursor-pointer" onClick={() => handleLocationFound(userLocation || { lat: 52.3676, lng: 4.9041 })}>

@@ -4,6 +4,7 @@ import { Clock, MapPin } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { VendingMachine, updateVendingMachineStatus, formatRelativeTime } from "@/utils/vendingMachines";
 import { cn } from "@/lib/utils";
+import { showAchievementToast } from "./AchievementToast";
 
 export interface VendingMachineCardProps {
   machine: VendingMachine;
@@ -25,9 +26,49 @@ const VendingMachineCard: React.FC<VendingMachineCardProps> = ({
     
     try {
       const updatedMachine = await updateVendingMachineStatus(machine.id, !machine.isStocked);
+      
       if (onStatusChange) {
         onStatusChange(updatedMachine);
       }
+      
+      // Show achievement toast based on the update
+      if (updatedMachine.isStocked) {
+        // Fresh bread reported
+        showAchievementToast({
+          type: "impact",
+          title: "Bedankt voor je bijdrage!",
+          description: "Je hebt zojuist {impactNumber} mensen gered van een tevergeefse reis.",
+          impactNumber: Math.floor(Math.random() * 10) + 3
+        });
+        
+        // Randomly show reward toast (20% chance)
+        if (Math.random() < 0.2) {
+          showAchievementToast({
+            type: "reward",
+            title: "Bonus punten!",
+            description: "Je hebt extra punten verdiend voor het als eerste melden van verse voorraad.",
+            rewardPoints: 25
+          });
+        }
+      } else {
+        // Empty machine reported
+        showAchievementToast({
+          type: "impact",
+          title: "Nuttige update!",
+          description: "Je hebt zojuist {impactNumber} mensen een lege automaat bespaard.",
+          impactNumber: Math.floor(Math.random() * 5) + 2
+        });
+      }
+      
+      // Randomly show badge toast (10% chance or first time)
+      if (Math.random() < 0.1) {
+        showAchievementToast({
+          type: "badge",
+          title: "Nieuwe badge ontgrendeld!",
+          description: "Je hebt de badge 'Actieve Bijdrager' verdiend."
+        });
+      }
+      
     } catch (error) {
       console.error("Failed to update machine status:", error);
     }
